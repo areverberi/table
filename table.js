@@ -8,56 +8,19 @@ var express = require('express'),
   http = require('http'),
   app = express(),
   server = http.createServer(app).listen(1337),
-  io = require('socket.io').listen(server);
-var bp = require('body-parser');
-var xlsx = require('xlsx');
-var mongoose = require('mongoose');
-var async = require('async');
-var multer = require('multer');
-var extend = require('extend');
-var winston = require('winston');
+  io = require('socket.io').listen(server),
+  bp = require('body-parser'),
+  xlsx = require('xlsx'),
+  mongoose = require('mongoose'),
+  async = require('async'),
+  multer = require('multer'),
+  extend = require('extend');
 var done = false;
-var Schema = mongoose.Schema;
-var cellSchema = new Schema({
-  row: Number,
-  col: Number,
-  val: {},
-  table: {
-    name: String
-  }
-});
-var layoutSchema = new Schema({
-  type: String,
-  position: Number,
-  size: Number,
-  table:{
-    name: String
-  }
-});
-var formatSchema = new Schema({
-  row: Number,
-  col: Number,
-  key: String,
-  value: {},
-  table: {
-    name: String
-  }
-});
-var lockSchema = new Schema({
-  row: Number,
-  col: Number, 
-  socket: String,
-  table:{
-    name: String
-  }
-});
-//winston.add(winston.transports.File, {filename: 'table.log'});
 mongoose.connect('mongodb://localhost/table');
-var Tupd = mongoose.model('Tupd', cellSchema);
-var Lupd = mongoose.model('Lupd', layoutSchema);
-var Fupd = mongoose.model('Fupd', formatSchema);
-var Lock = mongoose.model("Lock", lockSchema);
-
+var Tupd = require('./models/cellModel').Tupd;
+var Lupd = require('./models/layoutModel').Lupd;
+var Fupd = require('./models/formatModel').Fupd;
+var Lock = require('./models/lockModel').Lock;
 function datenum(v, date1904) {
   if(date1904) v+=1462;
   var epoch = Date.parse(v);
@@ -116,7 +79,6 @@ io.sockets.on('connection', function(socket){
 });
 app.post('/upload', function(req, res){
   if(done == true){
-    pars={table: req.files['up-file'].originalname, load:1}
     var wb = xlsx.readFile('./uploads/'+req.files['up-file'].originalname, {cellStyles:true, sheetStubs: true});
     
     var ws = wb.Sheets[wb.SheetNames[0]];
@@ -149,8 +111,6 @@ app.post('/upload', function(req, res){
 	}
 	if(!isEmpty(ws[cell].s.border))
 	{
-          //winston.log(ws[cell].s);
-          //winston.log(ws[cell].s.border);
           var borderObj={col: _col, row: _row, key: 'borders', value:{}};
 	  if(!isEmpty(ws[cell].s.border.top))
             extend(borderObj.value, {top:{width: 1, color: '#000'}});
@@ -160,10 +120,6 @@ app.post('/upload', function(req, res){
             extend(borderObj.value, {bottom:{width: 1, color: '#000'}});
 	  if(!isEmpty(ws[cell].s.border.right))
             extend(borderObj.value, {right:{width: 1, color: '#000'}});
-          if(cell == 'K6')
-          {
-            winston.log('info', 's value for K6'+ws[cell].s, borderObj);
-          }
           formatObj.push(borderObj);
 	}
 	if(ws[cell].s.fill)
@@ -176,33 +132,33 @@ app.post('/upload', function(req, res){
     async.parallel({
       layout: function(callback){
         var global_err=null;
-        layout.forEach(function(l){
+        async.each(layout, function(l, cb){
           Lupd.findOneAndUpdate({type:l.type, position: l.position, table:{name: req.files['up-file'].originalname}}, {type:l.type, position: l.position, size: l.size, table:{name: req.files['up-file'].originalname}}, {upsert:true}, function(err, numAffected, raw){
-            if(!err)
-              global_err=err;
+            if(err)
+              cb(err);
+            cb(null);
           });
-        });
-        callback(global_err, true);
+        }, callback);
       },
       format: function(callback){
         var global_err=null;
-        format.forEach(function(f){
+        async.each(format, function(f, cb){
           Fupd.findOneAndUpdate({row: f.row, col: f.col, key: f.key, table:{name:req.files['up-file'].originalname}}, {row: f.row, col: f.col, key: f.key, value: f.value, table:{name: req.files['up-file'].originalname}}, {upsert:true}, function(err, numAffected, raw){
-            if(!err)
-              global_err=err;
+            if(err)
+              cb(err);
+            cb(null);
           });
-        });
-        callback(global_err);
+        }, callback);
       },
       table: function(callback){
         var global_err=null;
-        table.forEach(function(c){
+        async.each(table, function(c, cb){
           Tupd.findOneAndUpdate({row: c.row, col: c.col, table: { name: req.files['up-file'].originalname }}, {row: c.row, col: c.col, val: c.val, table: { name: req.files['up-file'].originalname }}, {upsert: true}, function(err, numAffected, raw){
-            if(!err)
-              global_err=err;
+            if(err)
+              cb(err);
+            cb(null);
           });
-        });
-        callback(global_err);
+        }, callback);
       },
     },
       function (err,results){
