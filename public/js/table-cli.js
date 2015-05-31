@@ -257,7 +257,7 @@ $(document).ready(function(){
   {
     $('#tab').handsontable(options);
   }
-  var socket = io.connect('http://table.stschioppa.hom');
+  var socket = io.connect();
   socket.on('datachange'+$('#name').val(), function(data){
     var hot=$('#tab').handsontable('getInstance');
     data.forEach(function(cell){
