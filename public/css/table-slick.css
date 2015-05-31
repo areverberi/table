@@ -1,0 +1,25 @@
+#tab{
+  height:500px;
+}
+.cell-bold{
+  font-weight: bold;
+}
+.cell-italic{
+  font-style: italic;
+}
+.cell-top-border{
+  border-top: solid 1px black;
+}
+.cell-left-border{
+  border-left: solid 1px black;
+}
+.cell-bottom-border{
+  border-bottom: solid 1px black;
+}
+.cell-right-border{
+  border-right: solid 1px black;
+}
+.cell-editing{
+  background-color: black;
+  color: white;
+}

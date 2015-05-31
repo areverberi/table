@@ -1,0 +1,33 @@
+{
+  "name": "slickgrid-print-plugin",
+  "main": [
+    "dist/slickgrid-print-plugin.js"
+  ],
+  "ignore": [
+    "test",
+    "src/.jshintrc",
+    ".jshintrc",
+    ".travis.yml",
+    "karma.conf.js",
+    "Gruntfile.js",
+    "Makefile"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "jquery": "~2.1.1",
+    "bootstrap-sass": "~3.0.2",
+    "slickgrid": "~2.1.0"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/wmluke/slickgrid-print-plugin",
+  "_release": "3a186f6563",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "3a186f6563d417cf5e5e13f6066f854c98fd5ca5"
+  },
+  "_source": "git://github.com/wmluke/slickgrid-print-plugin.git",
+  "_target": "*",
+  "_originalSource": "wmluke/slickgrid-print-plugin",
+  "_direct": true
+}

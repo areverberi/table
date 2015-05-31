@@ -1,0 +1,14 @@
+{
+  "name": "slickgrid-spreadsheet-plugins",
+  "homepage": "https://github.com/danny-sg/slickgrid-spreadsheet-plugins",
+  "_release": "aea5460fd3",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "aea5460fd3f3caf38ceb654d402ebb9389aabd7e"
+  },
+  "_source": "git://github.com/danny-sg/slickgrid-spreadsheet-plugins.git",
+  "_target": "*",
+  "_originalSource": "danny-sg/slickgrid-spreadsheet-plugins",
+  "_direct": true
+}
