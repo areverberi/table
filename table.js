@@ -14,7 +14,8 @@ var express = require('express'),
   mongoose = require('mongoose'),
   async = require('async'),
   multer = require('multer'),
-  extend = require('extend');
+  extend = require('extend'),
+  q = require('q');
 var done = false;
 mongoose.connect('mongodb://localhost/table');
 var Tupd = require('./models/cellModel').Tupd;
@@ -35,15 +36,15 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.use(express.static(__dirname + '/public'));
 app.use(bp.json());
-app.use(multer({
-  dest: './uploads/',
-  rename: function(fieldname, filename){
-    return filename;
-  },
-  onFileUploadComplete: function(file){
-    done = true;
-  }
-}));
+// app.use(multer({
+//   dest: './uploads/',
+//   rename: function(fieldname, filename){
+//     return filename;
+//   },
+//   onFileUploadComplete: function(file){
+//     done = true;
+//   }
+// }));
 io.sockets.on('connection', function(socket){
   console.log('connected', socket.id);
   socket.on('datalock-req', function(data, callback){
@@ -77,9 +78,15 @@ io.sockets.on('connection', function(socket){
     Lock.findOneAndRemove(data, function(err, numAffected, raw){});
   });
 });
-app.post('/upload', function(req, res){
-  if(done == true){
-    var wb = xlsx.readFile('./uploads/'+req.files['up-file'].originalname, {cellStyles:true, sheetStubs: true});
+app.post('/upload', multer({
+  dest: './uploads/',
+  rename: function(fieldname, filename){
+    return filename;
+  },
+  onFileUploadComplete: function(file, req, res){
+    var deferred = q.defer();
+    req.fileUploadPromise = deferred.promise;
+    var wb = xlsx.readFile('./'+file.path, {cellStyles:true, sheetStubs: true});
     
     var ws = wb.Sheets[wb.SheetNames[0]];
     var layout=[];
@@ -92,7 +99,7 @@ app.post('/upload', function(req, res){
     //TODO rows are missing
     for (cell in ws){
       if (cell[0] === '!') continue;
-      var _col=xlsx.utils.decode_cell(cell).c;
+                           var _col=xlsx.utils.decode_cell(cell).c;
       var _row=xlsx.utils.decode_cell(cell).r;
       var tableObj={col: _col, 
         row: _row,
@@ -102,27 +109,27 @@ app.post('/upload', function(req, res){
       var formatObj=[];
       if(ws[cell].s)
       {
-	if(ws[cell].s.font)
-	{
-	  if(ws[cell].s.font.bold)
-	    formatObj.push({col: _col, row: _row, key: 'bold', value: true});
-	  if(ws[cell].s.font.italic)
-	    formatObj.push({col: _col, row: _row, key: 'italic', value: true});
-	}
-	if(!isEmpty(ws[cell].s.border))
-	{
+        if(ws[cell].s.font)
+        {
+          if(ws[cell].s.font.bold)
+            formatObj.push({col: _col, row: _row, key: 'bold', value: true});
+                           if(ws[cell].s.font.italic)
+                             formatObj.push({col: _col, row: _row, key: 'italic', value: true});
+        }
+        if(!isEmpty(ws[cell].s.border))
+        {
           var borderObj={col: _col, row: _row, key: 'borders', value:{}};
-	  if(!isEmpty(ws[cell].s.border.top))
+          if(!isEmpty(ws[cell].s.border.top))
             extend(borderObj.value, {top:{width: 1, color: '#000'}});
-	  if(!isEmpty(ws[cell].s.border.left))
+          if(!isEmpty(ws[cell].s.border.left))
             extend(borderObj.value, {left:{width: 1, color: '#000'}});
-	  if(!isEmpty(ws[cell].s.border.bottom))
+          if(!isEmpty(ws[cell].s.border.bottom))
             extend(borderObj.value, {bottom:{width: 1, color: '#000'}});
-	  if(!isEmpty(ws[cell].s.border.right))
+          if(!isEmpty(ws[cell].s.border.right))
             extend(borderObj.value, {right:{width: 1, color: '#000'}});
           formatObj.push(borderObj);
-	}
-	if(ws[cell].s.fill)
+        }
+        if(ws[cell].s.fill)
         {
           formatObj.push({col: _col, row: _row, key:'color', value: ws[cell].s.fill.fgColor});
         }
@@ -133,7 +140,7 @@ app.post('/upload', function(req, res){
       layout: function(callback){
         var global_err=null;
         async.each(layout, function(l, cb){
-          Lupd.findOneAndUpdate({type:l.type, position: l.position, table:{name: req.files['up-file'].originalname}}, {type:l.type, position: l.position, size: l.size, table:{name: req.files['up-file'].originalname}}, {upsert:true}, function(err, numAffected, raw){
+          Lupd.findOneAndUpdate({type:l.type, position: l.position, table:{name: file.originalname}}, {type:l.type, position: l.position, size: l.size, table:{name: file.originalname}}, {upsert:true}, function(err, numAffected, raw){
             if(err)
               cb(err);
             cb(null);
@@ -143,7 +150,7 @@ app.post('/upload', function(req, res){
       format: function(callback){
         var global_err=null;
         async.each(format, function(f, cb){
-          Fupd.findOneAndUpdate({row: f.row, col: f.col, key: f.key, table:{name:req.files['up-file'].originalname}}, {row: f.row, col: f.col, key: f.key, value: f.value, table:{name: req.files['up-file'].originalname}}, {upsert:true}, function(err, numAffected, raw){
+          Fupd.findOneAndUpdate({row: f.row, col: f.col, key: f.key, table:{name:file.originalname}}, {row: f.row, col: f.col, key: f.key, value: f.value, table:{name: file.originalname}}, {upsert:true}, function(err, numAffected, raw){
             if(err)
               cb(err);
             cb(null);
@@ -153,7 +160,7 @@ app.post('/upload', function(req, res){
       table: function(callback){
         var global_err=null;
         async.each(table, function(c, cb){
-          Tupd.findOneAndUpdate({row: c.row, col: c.col, table: { name: req.files['up-file'].originalname }}, {row: c.row, col: c.col, val: c.val, table: { name: req.files['up-file'].originalname }}, {upsert: true}, function(err, numAffected, raw){
+          Tupd.findOneAndUpdate({row: c.row, col: c.col, table: { name: file.originalname }}, {row: c.row, col: c.col, val: c.val, table: { name: file.originalname }}, {upsert: true}, function(err, numAffected, raw){
             if(err)
               cb(err);
             cb(null);
@@ -161,11 +168,23 @@ app.post('/upload', function(req, res){
         }, callback);
       },
     },
-      function (err,results){
-        res.redirect('/t/'+req.files['up-file'].originalname);
-      }
+    function (err,results){
+      //res.redirect('/t/'+file.originalname);
+      if(err)
+        deferred.reject(err);
+      else
+        deferred.resolve(file.originalname);
+    }
     );
   }
+}), 
+function(req, res){
+  req.fileUploadPromise.then(function(successful){
+    res.redirect('/t/'+successful);
+  })
+  .catch(function(errorResult){
+    res.redirect('/');
+  });
 });
 app.post('/save', function (req, res){
   if(req.body.changes.val)
