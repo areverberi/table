@@ -26,7 +26,7 @@ io.sockets.on('connection', socketHandler);
 app.post('/upload', multer({
   dest: './uploads/',
   rename: function(fieldname, filename){
-    return filename;
+    return filename.replace(/\s+/g,'');
   },
   onFileUploadComplete: xlsxOps.up
 }), 

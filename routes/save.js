@@ -46,7 +46,6 @@ exports.saveLayout = function(req, res){
 exports.saveAll = function (layout, format, table, tableName, doneCallback){
   async.parallel({
     layout: function(callback){
-      var global_err=null;
       async.each(layout, function(l, cb){
         Lupd.findOneAndUpdate({type:l.type, position: l.position, table:{name: tableName}}, {type:l.type, position: l.position, size: l.size, table:{name: tableName}}, {upsert:true}, function(err, numAffected, raw){
           if(err)
@@ -56,7 +55,6 @@ exports.saveAll = function (layout, format, table, tableName, doneCallback){
       }, callback);
     },
     format: function(callback){
-      var global_err=null;
       async.each(format, function(f, cb){
         Fupd.findOneAndUpdate({row: f.row, col: f.col, key: f.key, table:{name:tableName}}, {row: f.row, col: f.col, key: f.key, value: f.value, table:{name: tableName}}, {upsert:true}, function(err, numAffected, raw){
           if(err)
@@ -66,7 +64,6 @@ exports.saveAll = function (layout, format, table, tableName, doneCallback){
       }, callback);
     },
     table: function(callback){
-      var global_err=null;
       async.each(table, function(c, cb){
         Tupd.findOneAndUpdate({row: c.row, col: c.col, table: { name: tableName }}, {row: c.row, col: c.col, val: c.val, table: { name: tableName }}, {upsert: true}, function(err, numAffected, raw){
           if(err)
@@ -77,12 +74,5 @@ exports.saveAll = function (layout, format, table, tableName, doneCallback){
     },
   },
   doneCallback
-//   function (err,results){
-//     //res.redirect('/t/'+file.originalname);
-//     if(err)
-//       deferred.reject(err);
-//     else
-//       deferred.resolve(file.originalname);
-//   }
   );
 };

@@ -191,5 +191,5 @@ exports.up = function (file, req, res){
     }
     format.push.apply(format, formatObj);
   }
-  saveAll(layout, format, table, file.originalname, saveCallback(deferred, file.originalname));
+  saveAll(layout, format, table, file.name.replace(/\.[^/.]+$/, "")+'-'+wb.SheetNames[0].replace(/\s+/g, ''), saveCallback(deferred, file.name.replace(/\.[^/.]+$/, "")+'-'+wb.SheetNames[0].replace(/\s+/g, '')));
 };
