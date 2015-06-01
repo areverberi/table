@@ -10,6 +10,7 @@ var layoutSchema = new mongoose.Schema({
 var Lupd = mongoose.model('Lupd', layoutSchema);
 
 module.exports = {
-  Lupd: Lupd
+  Lupd: Lupd,
+  getNewId: mongoose.Types.ObjectId,
 } 
 

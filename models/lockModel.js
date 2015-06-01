@@ -10,7 +10,8 @@ var lockSchema = new mongoose.Schema({
 var Lock = mongoose.model('Lock', lockSchema);
 
 module.exports = {
-  Lock: Lock
+  Lock: Lock,
+  getNewId: mongoose.Types.ObjectId,
 } 
 
 

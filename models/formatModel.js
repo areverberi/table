@@ -11,5 +11,6 @@ var formatSchema = new mongoose.Schema({
 var Fupd = mongoose.model('Fupd', formatSchema);
 
 module.exports = {
-  Fupd: Fupd
+  Fupd: Fupd,
+  getNewId: mongoose.Types.ObjectId,
 } 

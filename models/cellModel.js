@@ -10,5 +10,6 @@ var cellSchema = new mongoose.Schema({
 var Tupd = mongoose.model('Tupd', cellSchema);
  
 module.exports = {
-  Tupd: Tupd
+  Tupd: Tupd,
+  getNewId: mongoose.Types.ObjectId,
 }
