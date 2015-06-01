@@ -1,13 +1,26 @@
-var async = require('async');
-var cellModel = require('../models/cellModel');
-var Tupd = cellModel.Tupd;
-var formatModel = require('../models/formatModel');
-var Fupd = formatModel.Fupd;
-var layoutModel = require('../models/layoutModel');
-var Lupd = layoutModel.Lupd;
-var lockModel = require('../models/lockModel');
-var Lock = lockModel.Lock;
-exports.load = function(req, res){
+var async = require('async'),
+  cellModel = require('../models/cellModel'),
+  Tupd = cellModel.Tupd,
+  formatModel = require('../models/formatModel'),
+  Fupd = formatModel.Fupd,
+  layoutModel = require('../models/layoutModel'),
+  Lupd = layoutModel.Lupd,
+  lockModel = require('../models/lockModel'),
+  Lock = lockModel.Lock;
+  
+function loadCallback(req, res)
+{
+  this.req=req;
+  this.res=res;
+  var self=this;
+  return (function loadCb(err, results){
+    self.res.writeHead(200, { 'Content-Type': 'application/json' });
+    self.res.end(JSON.stringify(results));
+  });
+}
+
+function loadData(req, res, cb)
+{
   var filter={table: {name: req.body.table }};
   var filter_select='-_id -table -__v';
   async.parallel({
@@ -25,10 +38,16 @@ exports.load = function(req, res){
     },
   },
   function(err, results){
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(results));                                                                          
+    cb(req, res)(err, results);
   });
-};
+}
+
+exports.load = function(req, res){
+  loadData(req, res, loadCallback);
+}
+
+exports.loadData = loadData;
+
 exports.clone = function(req, res){
   if(req.params.nameold && req.params.namenew)
   {

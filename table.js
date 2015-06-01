@@ -8,13 +8,10 @@ var express = require('express'),
   multer = require('multer'),
   save = require('./routes/save'),
   tableOps = require('./routes/tableOps'),
+  socketHandler = require('./routes/socketOps').socketHandler,
   xlsxOps = require('./routes/xlsxOps');
 
 mongoose.connect('mongodb://localhost/table');
-var Tupd = require('./models/cellModel').Tupd;
-var Lupd = require('./models/layoutModel').Lupd;
-var Fupd = require('./models/formatModel').Fupd;
-var Lock = require('./models/lockModel').Lock;
  
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -25,38 +22,7 @@ app.use(function(req, res, next){
 app.use(express.static(__dirname + '/public'));
 app.use(bp.json());
 
-io.sockets.on('connection', function(socket){
-  socket.on('datalock-req', function(data, callback){
-    Lock.count(data, function(err,count){
-      if(err)
-        return;
-      if(count>0)
-        callback({accepted: false});
-      else
-      {
-        var newLock= new Lock({row:data.row, col:data.col, socket: socket.id, table:{name:data.table.name}});
-        newLock.save(function(err, newLock){
-          if(err)
-          {
-            callback({accepted: false});
-          }
-          else
-          {
-            socket.broadcast.emit('datalock', data);
-            callback({accepted: true});
-          }
-        });
-      }
-    });
-  });
-  socket.on('disconnect', function(){
-    Lock.findOneAndRemove({socket:socket.id}, function(err, numAffected, raw){});
-  });
-  socket.on('datalock-lift', function(data){
-    socket.broadcast.emit('datalock-lift', data);
-    Lock.findOneAndRemove(data, function(err, numAffected, raw){});
-  });
-});
+io.sockets.on('connection', socketHandler);
 app.post('/upload', multer({
   dest: './uploads/',
   rename: function(fieldname, filename){
