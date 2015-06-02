@@ -46,33 +46,25 @@ exports.saveLayout = function(req, res){
 exports.saveAll = function (layout, format, table, tableName, doneCallback){
   async.parallel({
     layout: function(callback){
-      async.each(layout, function(l, cb){
-        Lupd.findOneAndUpdate({type:l.type, position: l.position, table:{name: tableName}}, {type:l.type, position: l.position, size: l.size, table:{name: tableName}}, {upsert:true}, function(err, numAffected, raw){
-          if(err)
-            cb(err);
-          cb(null);
-        });
-      }, callback);
+      var lBulk = Lupd.collection.initializeUnorderedBulkOp();
+      layout.forEach(function(l){
+        lBulk.find({type:l.type, position: l.position, table:{name: tableName}}).upsert().updateOne({type:l.type, position: l.position, size: l.size, table:{name: tableName}});
+      });
+      lBulk.execute(callback);
     },
     format: function(callback){
-      async.each(format, function(f, cb){
-        Fupd.findOneAndUpdate({row: f.row, col: f.col, key: f.key, table:{name:tableName}}, {row: f.row, col: f.col, key: f.key, value: f.value, table:{name: tableName}}, {upsert:true}, function(err, numAffected, raw){
-          if(err)
-            cb(err);
-          cb(null);
-        });
-      }, callback);
+      var fBulk = Fupd.collection.initializeUnorderedBulkOp();
+      format.forEach(function(f){
+        fBulk.find({row: f.row, col: f.col, key: f.key, table:{name:tableName}}).upsert().updateOne({row: f.row, col: f.col, key: f.key, value: f.value, table:{name: tableName}});
+      });
+      fBulk.execute(callback);
     },
     table: function(callback){
-      async.each(table, function(c, cb){
-        Tupd.findOneAndUpdate({row: c.row, col: c.col, table: { name: tableName }}, {row: c.row, col: c.col, val: c.val, table: { name: tableName }}, {upsert: true}, function(err, numAffected, raw){
-          if(err)
-            cb(err);
-          cb(null);
-        });
-      }, callback);
+      var tBulk = Tupd.collection.initializeUnorderedBulkOp();
+      table.forEach(function(t){
+        tBulk.find({row: t.row, col: t.col, table: { name: tableName }}).upsert().updateOne({row: t.row, col: t.col, val: t.val, table: { name: tableName }});
+      });
+      tBulk.execute(callback);
     },
-  },
-  doneCallback
-  );
+  }, doneCallback);
 };

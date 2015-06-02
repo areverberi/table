@@ -35,7 +35,10 @@ function saveCallback(deferred, filename)
   var self=this;
   return (function saveCb(err, results){
     if(err)
+    {
+      console.log('ERROR------- ', err.errmsg);
       self.deferred.reject(err);
+    }
     else
       self.deferred.resolve(self.filename);
   });
