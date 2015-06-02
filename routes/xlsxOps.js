@@ -146,53 +146,104 @@ exports.up = function (file, req, res){
   var deferred = q.defer();
   req.fileUploadPromise = deferred.promise;
   var wb = xlsx.readFile('./'+file.path, {cellStyles:true, sheetStubs: true});
-  var ws = wb.Sheets[wb.SheetNames[0]];
-  var layout=[];
-  var format=[];
-  var table=[];
-  ws['!cols'].forEach(function(col, index){
-    var layoutObj = {type: 'col', position: index, size: col.wpx}
-    layout.push(layoutObj);
-  });
-  //TODO rows are missing
-  for (cell in ws){
-    if (cell[0] === '!') continue;
-    var _col=xlsx.utils.decode_cell(cell).c;
-    var _row=xlsx.utils.decode_cell(cell).r;
-    var tableObj={col: _col, 
-      row: _row,
-      val: ws[cell].v,
-    };
-    table.push(tableObj);
-    var formatObj=[];
-    if(ws[cell].s)
-    {
-      if(ws[cell].s.font)
+  async.each(wb.SheetNames, function(sheetName, cb){
+    var ws = wb.Sheets[sheetName];
+    var layout=[];
+    var format=[];
+    var table=[];
+    ws['!cols'].forEach(function(col, index){
+      var layoutObj = {type: 'col', position: index, size: col.wpx}
+      layout.push(layoutObj);
+    });
+    //TODO rows are missing
+    for (cell in ws){
+      if (cell[0] === '!') continue;
+             var _col=xlsx.utils.decode_cell(cell).c;
+      var _row=xlsx.utils.decode_cell(cell).r;
+      var tableObj={col: _col, 
+        row: _row,
+        val: ws[cell].v,
+      };
+      table.push(tableObj);
+      var formatObj=[];
+      if(ws[cell].s)
       {
-        if(ws[cell].s.font.bold)
-          formatObj.push({col: _col, row: _row, key: 'bold', value: true});
-          if(ws[cell].s.font.italic)
-            formatObj.push({col: _col, row: _row, key: 'italic', value: true});
+        if(ws[cell].s.font)
+        {
+          if(ws[cell].s.font.bold)
+            formatObj.push({col: _col, row: _row, key: 'bold', value: true});
+             if(ws[cell].s.font.italic)
+               formatObj.push({col: _col, row: _row, key: 'italic', value: true});
+        }
+        if(!isEmpty(ws[cell].s.border))
+        {
+          var borderObj={col: _col, row: _row, key: 'borders', value:{}};
+          if(!isEmpty(ws[cell].s.border.top))
+            extend(borderObj.value, {top:{width: 1, color: '#000'}});
+          if(!isEmpty(ws[cell].s.border.left))
+            extend(borderObj.value, {left:{width: 1, color: '#000'}});
+          if(!isEmpty(ws[cell].s.border.bottom))
+            extend(borderObj.value, {bottom:{width: 1, color: '#000'}});
+          if(!isEmpty(ws[cell].s.border.right))
+            extend(borderObj.value, {right:{width: 1, color: '#000'}});
+          formatObj.push(borderObj);
+        }
+        if(ws[cell].s.fill)
+        {
+          formatObj.push({col: _col, row: _row, key:'color', value: ws[cell].s.fill.fgColor});
+        }
       }
-      if(!isEmpty(ws[cell].s.border))
-      {
-        var borderObj={col: _col, row: _row, key: 'borders', value:{}};
-        if(!isEmpty(ws[cell].s.border.top))
-          extend(borderObj.value, {top:{width: 1, color: '#000'}});
-        if(!isEmpty(ws[cell].s.border.left))
-          extend(borderObj.value, {left:{width: 1, color: '#000'}});
-        if(!isEmpty(ws[cell].s.border.bottom))
-          extend(borderObj.value, {bottom:{width: 1, color: '#000'}});
-        if(!isEmpty(ws[cell].s.border.right))
-          extend(borderObj.value, {right:{width: 1, color: '#000'}});
-        formatObj.push(borderObj);
-      }
-      if(ws[cell].s.fill)
-      {
-        formatObj.push({col: _col, row: _row, key:'color', value: ws[cell].s.fill.fgColor});
-      }
+      format.push.apply(format, formatObj);
     }
-    format.push.apply(format, formatObj);
-  }
-  saveAll(layout, format, table, file.name.replace(/\.[^/.]+$/, "")+'-'+wb.SheetNames[0].replace(/\s+/g, ''), saveCallback(deferred, file.name.replace(/\.[^/.]+$/, "")+'-'+wb.SheetNames[0].replace(/\s+/g, '')));
+    saveAll(layout, format, table, file.name.replace(/\.[^/.]+$/, "")+'-'+sheetName.replace(/\s+/g, ''), cb);
+  }, saveCallback(deferred, file.name.replace(/\.[^/.]+$/, "")+'-'+wb.SheetNames[0].replace(/\s+/g, ''))); 
+//   var ws = wb.Sheets[wb.SheetNames[0]];
+//   var layout=[];
+//   var format=[];
+//   var table=[];
+//   ws['!cols'].forEach(function(col, index){
+//     var layoutObj = {type: 'col', position: index, size: col.wpx}
+//     layout.push(layoutObj);
+//   });
+//   //TODO rows are missing
+//   for (cell in ws){
+//     if (cell[0] === '!') continue;
+//     var _col=xlsx.utils.decode_cell(cell).c;
+//     var _row=xlsx.utils.decode_cell(cell).r;
+//     var tableObj={col: _col, 
+//       row: _row,
+//       val: ws[cell].v,
+//     };
+//     table.push(tableObj);
+//     var formatObj=[];
+//     if(ws[cell].s)
+//     {
+//       if(ws[cell].s.font)
+//       {
+//         if(ws[cell].s.font.bold)
+//           formatObj.push({col: _col, row: _row, key: 'bold', value: true});
+//           if(ws[cell].s.font.italic)
+//             formatObj.push({col: _col, row: _row, key: 'italic', value: true});
+//       }
+//       if(!isEmpty(ws[cell].s.border))
+//       {
+//         var borderObj={col: _col, row: _row, key: 'borders', value:{}};
+//         if(!isEmpty(ws[cell].s.border.top))
+//           extend(borderObj.value, {top:{width: 1, color: '#000'}});
+//         if(!isEmpty(ws[cell].s.border.left))
+//           extend(borderObj.value, {left:{width: 1, color: '#000'}});
+//         if(!isEmpty(ws[cell].s.border.bottom))
+//           extend(borderObj.value, {bottom:{width: 1, color: '#000'}});
+//         if(!isEmpty(ws[cell].s.border.right))
+//           extend(borderObj.value, {right:{width: 1, color: '#000'}});
+//         formatObj.push(borderObj);
+//       }
+//       if(ws[cell].s.fill)
+//       {
+//         formatObj.push({col: _col, row: _row, key:'color', value: ws[cell].s.fill.fgColor});
+//       }
+//     }
+//     format.push.apply(format, formatObj);
+//   }
+//   saveAll(layout, format, table, file.name.replace(/\.[^/.]+$/, "")+'-'+wb.SheetNames[0].replace(/\s+/g, ''), saveCallback(deferred, file.name.replace(/\.[^/.]+$/, "")+'-'+wb.SheetNames[0].replace(/\s+/g, '')));
 };

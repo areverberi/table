@@ -31,6 +31,7 @@ app.post('/upload', multer({
   onFileUploadComplete: xlsxOps.up
 }), 
 function(req, res){
+  res.setTimeout(0);
   req.fileUploadPromise.then(function(successful){
     res.redirect('/t/'+successful);
   })
