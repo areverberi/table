@@ -146,13 +146,17 @@ exports.up = function (file, req, res){
   var deferred = q.defer();
   req.fileUploadPromise = deferred.promise;
   var wb = xlsx.readFile('./'+file.path, {cellStyles:true, sheetStubs: true});
+//   var layout=[];
+//   var format=[];
+//   var table=[];
   async.each(wb.SheetNames, function(sheetName, cb){
     var ws = wb.Sheets[sheetName];
+    var tableName = {name: file.name.replace(/\.[^/.]+$/, "")+'-'+sheetName.replace(/\s+/g, '')};
     var layout=[];
     var format=[];
     var table=[];
     ws['!cols'].forEach(function(col, index){
-      var layoutObj = {type: 'col', position: index, size: col.wpx}
+      var layoutObj = {type: 'col', position: index, size: col.wpx, table: tableName}
       layout.push(layoutObj);
     });
     //TODO rows are missing
@@ -163,6 +167,7 @@ exports.up = function (file, req, res){
       var tableObj={col: _col, 
         row: _row,
         val: ws[cell].v,
+        table: tableName,
       };
       table.push(tableObj);
       var formatObj=[];
@@ -192,6 +197,7 @@ exports.up = function (file, req, res){
         {
           formatObj.push({col: _col, row: _row, key:'color', value: ws[cell].s.fill.fgColor});
         }
+        formatObj.table = tableName;
       }
       format.push.apply(format, formatObj);
     }
