@@ -44,27 +44,47 @@ exports.saveLayout = function(req, res){
   });
 };
 exports.saveAll = function (layout, format, table, tableName, doneCallback){
-  async.parallel({
-    layout: function(callback){
-      var lBulk = Lupd.collection.initializeUnorderedBulkOp();
-      layout.forEach(function(l){
-        lBulk.find({type:l.type, position: l.position, table:{name: tableName}}).upsert().updateOne({type:l.type, position: l.position, size: l.size, table:{name: tableName}});
-      });
-      lBulk.execute(callback);
+  async.series({
+    del: function(callback){
+      async.parallel({
+        t: function(cb){
+          Tupd.remove({table: {name: tableName}}, cb);
+        },
+        l: function(cb){
+          Lupd.remove({table: {name: tableName}}, cb);
+        },
+        f: function(cb){
+          Fupd.remove({table: {name: tableName}}, cb);
+        },
+      }, callback);
     },
-    format: function(callback){
-      var fBulk = Fupd.collection.initializeUnorderedBulkOp();
-      format.forEach(function(f){
-        fBulk.find({row: f.row, col: f.col, key: f.key, table:{name:tableName}}).upsert().updateOne({row: f.row, col: f.col, key: f.key, value: f.value, table:{name: tableName}});
-      });
-      fBulk.execute(callback);
-    },
-    table: function(callback){
-      var tBulk = Tupd.collection.initializeUnorderedBulkOp();
-      table.forEach(function(t){
-        tBulk.find({row: t.row, col: t.col, table: { name: tableName }}).upsert().updateOne({row: t.row, col: t.col, val: t.val, table: { name: tableName }});
-      });
-      tBulk.execute(callback);
+    ins: function(callback){
+      async.parallel({
+        layout: function(cb){
+          var lBulk = Lupd.collection.initializeUnorderedBulkOp();
+          layout.forEach(function(l){
+            //lBulk.find({type:l.type, position: l.position, table:{name: tableName}}).upsert().updateOne({type:l.type, position: l.position, size: l.size, table:{name: tableName}});
+            lBulk.insert({type:l.type, position: l.position, size: l.size, table:{name: tableName}});
+          });
+          lBulk.execute(cb);
+        },
+        format: function(cb){
+          var fBulk = Fupd.collection.initializeUnorderedBulkOp();
+          format.forEach(function(f){
+//             fBulk.find({row: f.row, col: f.col, key: f.key, table:{name:tableName}}).upsert().updateOne({row: f.row, col: f.col, key: f.key, value: f.value, table:{name: tableName}});
+            fBulk.insert({row: f.row, col: f.col, key: f.key, value: f.value, table:{name: tableName}});
+          });
+          fBulk.execute(cb);
+        },
+        table: function(cb){
+          var tBulk = Tupd.collection.initializeUnorderedBulkOp();
+          table.forEach(function(t){
+//             tBulk.find({row: t.row, col: t.col, table: { name: tableName }}).upsert().updateOne({row: t.row, col: t.col, val: t.val, table: { name: tableName }});
+            tBulk.insert({row: t.row, col: t.col, val: t.val, table: { name: tableName }});
+          });
+          tBulk.execute(cb);
+        },
+      }, callback);
     },
   }, doneCallback);
 };
