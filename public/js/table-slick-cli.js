@@ -136,6 +136,7 @@ $(document).ready(function(){
       });
       $.contextMenu({
         selector: '.slick-cell',
+        zIndex: 9999,
         items:{
           "bold": {
             name:"Grassetto", 
