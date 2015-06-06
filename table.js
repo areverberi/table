@@ -40,6 +40,10 @@ function(req, res){
   });
 });
 
+app.get('/', function(req, res){
+  res.render('index');
+});
+
 app.post('/save', save.saveCell);
 
 app.post('/savel', save.saveLayout);
