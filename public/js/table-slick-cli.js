@@ -1,5 +1,6 @@
 function saveLayoutChange(r, c, s)
 {
+  console.log(r, c, s);
   $.ajax({
     url: '/savel',
     dataType: 'json',
@@ -585,6 +586,7 @@ $(document).ready(function(){
     }
     if(results.data.layout)
     {
+      console.log(results.data.layout);
       results.data.layout.forEach(function(l){
         if(l.type === 'col')
         {
@@ -595,20 +597,23 @@ $(document).ready(function(){
     }
     if(results.data.color)
     {
+      console.log(results.data.color);
       results.data.color.forEach(function(c){
         //console.log('color', c, grid.getCellNode(c.row, c.col+1));
 //         var style={};
 //         style[c.row]={};
 //         style[c.row]['col'+c.col]='cell-'+f.key;
 //         grid.addCellCssStyles(f.key+f.row+'-'+f.col, style);
-        if(!lookForClass('.cell-bg'+c.value.rgb.substr(2)))
-          $("<style type='text/css'> .cell-bg"+c.value.rgb.substr(2)+"{ background-color: #"+c.value.rgb.substr(2)+" }</style>").appendTo("head");
-        style={};
-        style[c.row]={};
-        style[c.row]['col'+c.col]='cell-bg'+c.value.rgb.substr(2);
-        //$(grid.getCellNode(c.row, c.col+1)).css('background-color', '#'+c.value.rgb.substr(2));
-        //console.log(grid.getCellNode(c.row, c.col+1));
-        grid.addCellCssStyles(c.key+c.row+'-'+c.col, style);
+        if(c.value && c.value.rgb){
+          if(!lookForClass('.cell-bg'+c.value.rgb.substr(2)))
+            $("<style type='text/css'> .cell-bg"+c.value.rgb.substr(2)+"{ background-color: #"+c.value.rgb.substr(2)+" }</style>").appendTo("head");
+          style={};
+          style[c.row]={};
+          style[c.row]['col'+c.col]='cell-bg'+c.value.rgb.substr(2);
+          //$(grid.getCellNode(c.row, c.col+1)).css('background-color', '#'+c.value.rgb.substr(2));
+          //console.log(grid.getCellNode(c.row, c.col+1));
+          grid.addCellCssStyles(c.key+c.row+'-'+c.col, style);
+        };
       });
     }
     if(results.data.locks)
@@ -634,7 +639,7 @@ $(document).ready(function(){
         var _col = grid.getActiveCell().cell-1;
         style[grid.getActiveCell().row]={};
         style[grid.getActiveCell().row]['col'+_col]='cell-bg'+c;
-        grid.addCellCssStyles('color'+_row+'-'+_col, style);
+        grid.setCellCssStyles('color'+_row+'-'+_col, style);
         //$(grid.getActiveCellNode()).css('background-color', '#'+$('#showPaletteOnly').spectrum('get').toHex());
         saveFormatChange(_row, _col, 'color', {rgb:'FF'+c});
       },

@@ -28,18 +28,23 @@ exports.saveFormat = function(req, res){
 };
 exports.saveLayout = function(req, res){
   var t, p;
-  if(!req.body.changes.row)
-  {
-    t='col';
-    p=req.body.changes.col;
-  }
-  if(!req.body.changes.col)
+  console.log(req.body);
+  if(req.body.changes.row !== null && req.body.changes.row >=0)
   {
     t='row';
     p=req.body.changes.row;
   }
+  if(req.body.changes.col !== null && req.body.changes.col >=0)
+  {
+    t='col';
+    p=req.body.changes.col;
+  }
   Lupd.findOneAndUpdate({type:t, position: p, table:{name: req.body.table}}, {type:t, position: p, size: req.body.changes.size, table:{name: req.body.table}}, {upsert:true}, function(err, numAffected, raw){
-    if(err) return;
+    if(err){
+      console.log(err);
+      return;
+    }
+    console.log(numAffected, raw);
     req.io.emit('datachange'+req.body.table, {type: t, position: p, size: req.body.changes.size, change_type: 'layout'});
   });
 };

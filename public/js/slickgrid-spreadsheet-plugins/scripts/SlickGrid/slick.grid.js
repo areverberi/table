@@ -1017,7 +1017,7 @@ if (typeof Slick === "undefined") {
       e = e || new Slick.EventData();
       args = args || {};
       args.grid = self;
-      return evt.notify(args, e, self);
+      return Q(evt.notify(args, e, self));
     }
 
     function getEditorLock() {
@@ -2613,13 +2613,8 @@ if (typeof Slick === "undefined") {
 
       var columnDef = columns[activeCell];
       var item = getDataItem(activeRow);
-//EDITED TO USE PROMISES (MAYBE)
-//       if (trigger(self.onBeforeEditCell, {row: activeRow, cell: activeCell, item: item, column: columnDef}) === false) {
-//         setFocus();
-//         return;
-//       }
-      Q(trigger(self.onBeforeEditCell, {row: activeRow, cell: activeCell, item: item, column: columnDef})).done(function(result){
-        console.log(result);
+      trigger(self.onBeforeEditCell, {row: activeRow, cell: activeCell, item: item, column: columnDef}).done(function(result){
+        //console.log(result);
         if(result === false)
         {
           setFocus()
