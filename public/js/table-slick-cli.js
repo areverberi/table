@@ -1,63 +1,87 @@
-function saveLayoutChange(r, c, s)
-{
-  console.log(r, c, s);
-  $.ajax({
-    url: '/savel',
-    dataType: 'json',
-    contentType: 'application/json',
-    type: 'POST',
-    data: JSON.stringify({changes: {row:r, col:c, size:s}, table:$('#name').val()})
-  });
-}
-function saveFormatChange(_row, _col, _key, _value)
-{
-  $.ajax({
-    url: '/savef',
-    dataType: 'json',
-    contentType: 'application/json',
-    type: 'POST',
-    data: JSON.stringify({meta: {row:_row, col:_col, key:_key, value:_value}, table:$('#name').val()})
-  });
-}
-function saveDataChange(change)
-{
-  $.ajax({
-    url: '/save',
-    dataType: 'json',
-    contentType: 'application/json',
-    type: 'POST',
-    data: JSON.stringify({changes: change, table:$('#name').val()})
-  });
-}
-function lookForClass(cl)
-{
-  for(var i=0; i<document.styleSheets.length; ++i)
-  {
-    var sheet=document.styleSheets[i];
-    if(sheet.ownerNode.href)
-    {
-      continue;
-    }
-    for(var j=0; j<sheet.cssRules.length; ++j)
-    {
-      if(sheet.cssRules[j].selectorText === cl)
-        return true;
-    }
-  }
-  return false;
-}
-function composeNewBorderCssClass(cellNode, newClass)
-{
-  var borderClasses=['cell-top-border', 'cell-left-border', 'cell-bottom-border', 'cell-right-border'];
-  var classes=[];
-  var appliedClasses=newClass.split(' ');
-  borderClasses.forEach(function(availClass){
-    if($(cellNode).hasClass(availClass))
-      classes.push(availClass);
-  });
-  return classes.join(' ');
-}
+(function($){
+  $.modelCommunication = function(options){
+    var mC = {
+      options: $.extend({
+        'layoutURL': '/savel',
+        'formatURL': '/savef',
+        'dataURL': '/save',
+      }, options),
+      saveLayoutChange: function(r,c,s){
+        $.ajax({
+          url: mC.options.layoutURL,
+          dataType: 'json',
+          contentType: 'application/json',
+          type: 'POST',
+          data: JSON.stringify({changes: {row:r, col:c, size:s}, table:$('#name').val()})
+        });
+      },
+      saveFormatChange: function(_row, _col, _key, _value){
+        $.ajax({
+          url: mC.options.formatURL,
+          dataType: 'json',
+          contentType: 'application/json',
+          type: 'POST',
+          data: JSON.stringify({meta: {row:_row, col:_col, key:_key, value:_value}, table:$('#name').val()})
+        });
+      },
+      saveDataChange: function(change){
+        $.ajax({
+          url: mC.options.dataURL,
+          dataType: 'json',
+          contentType: 'application/json',
+          type: 'POST',
+          data: JSON.stringify({changes: change, table:$('#name').val()})
+        });
+      },
+ //TODO needs loading code too. eventually socket code as well
+    };
+    return {
+      saveLayoutChange: mC.saveLayoutChange,
+      saveFormatChange: mC.saveFormatChange,
+      saveDataChange: mC.saveDataChange,
+    };
+  };
+})(jQuery);
+(function($){
+  $.cellStyleSetter = function(options){
+    var cSS ={
+      lookForClass: function(cl){
+        for(var i=0; i<document.styleSheets.length; ++i)
+        {
+          var sheet=document.styleSheets[i];
+          if(sheet.ownerNode.href)
+          {
+            continue;
+          }
+          for(var j=0; j<sheet.cssRules.length; ++j)
+          {
+            if(sheet.cssRules[j].selectorText === cl)
+              return true;
+          }
+        }
+        return false;
+      },
+      composeNewBorderCssClass: function(cellNode, newClass){
+        var borderClasses=['cell-top-border', 'cell-left-border', 'cell-bottom-border', 'cell-right-border'];
+        var classes=[];
+        var appliedClasses=newClass.split(' ');
+        borderClasses.forEach(function(availClass){
+          if($(cellNode).hasClass(availClass))
+            classes.push(availClass);
+        });
+        return classes.join(' ');
+      },
+    };
+    return {
+      lookForClass: cSS.lookForClass,
+      composeNewBorderCssClass: cSS.composeNewBorderCssClass,
+    };
+    //TODO will contain all code dealing with querying/applying/removing css styles to cells (formatting + layout)
+  };
+})(jQuery);
 $(document).ready(function(){
+  var modCom = $.modelCommunication();
+  var cSS = $.cellStyleSetter();
   var grid;
   var columns =[];
   columns.push({id:'id', name:'Riga', field:'id', width:40});
@@ -108,10 +132,10 @@ $(document).ready(function(){
         var _row=args.row
         var _col=args.cell-1;
         var _val=args.item['col'+_col];
-        saveDataChange({row:_row, col:_col, val:_val});
+        modCom.saveDataChange({row:_row, col:_col, val:_val});
       });
       grid.onColumnsResized.subscribe(function(e, args){
-        saveLayoutChange(null, args.cols[0]-1, args.nWidths[0]);
+        modCom.saveLayoutChange(null, args.cols[0]-1, args.nWidths[0]);
       });
       grid.onScroll.subscribe(function(e, args){
         if($(grid.getCanvasNode()).width()<=grid.getViewport().rightPx)
@@ -164,7 +188,7 @@ $(document).ready(function(){
                       _value = null;
                       grid.removeCellCssStyles(_key+i+'-'+(j-1));
                     }
-                    saveFormatChange(i, j-1, _key, _value);
+                    modCom.saveFormatChange(i, j-1, _key, _value);
                   }
               }
               else
@@ -180,7 +204,7 @@ $(document).ready(function(){
                 else
                   grid.removeCellCssStyles(_key+_row+'-'+_col);
                 var _value = ($(options.$trigger[0]).hasClass('cell-bold')? true : null);
-                saveFormatChange(_row, _col, _key, _value);
+                modCom.saveFormatChange(_row, _col, _key, _value);
               }
             },
           },
@@ -208,7 +232,7 @@ $(document).ready(function(){
                       _value = null;
                       grid.removeCellCssStyles(_key+i+'-'+(j-1));
                     }
-                    saveFormatChange(i, j-1, _key, _value);
+                    modCom.saveFormatChange(i, j-1, _key, _value);
                   }
               }
               else
@@ -224,11 +248,10 @@ $(document).ready(function(){
                 else
                   grid.removeCellCssStyles(_key+_row+'-'+_col);
                 var _value = ($(options.$trigger[0]).hasClass('cell-italic')? true : null);
-                saveFormatChange(_row, _col, _key, _value);
+                modCom.saveFormatChange(_row, _col, _key, _value);
               }
             },
           },
-          //TODO recheck all borders css setting bc it's not working
           "borders": {
             name:"Bordi",
             items:{
@@ -241,25 +264,25 @@ $(document).ready(function(){
                   if(selectedRange && selectedRange.contains(_row, _col+1)){
                     for(var j=selectedRange.fromCell; j<=selectedRange.toCell; ++j){
                       $(grid.getCellNode(selectedRange.fromRow,j)).toggleClass('cell-top-border');
-                      var classString=composeNewBorderCssClass(grid.getCellNode(selectedRange.fromRow,j), 'cell-top-border');
+                      var classString=cSS.composeNewBorderCssClass(grid.getCellNode(selectedRange.fromRow,j), 'cell-top-border');
                       var style={};
                       style[selectedRange.fromRow]={};
                       style[selectedRange.fromRow]['col'+(j-1)]=classString;
                       grid.setCellCssStyles('border'+selectedRange.fromRow+'-'+(j-1), style);
                       var _value = ($(grid.getCellNode(selectedRange.fromRow,j)).hasClass('cell-top-border')? {top: {width: 1, color:'#000'}} : {top:null});
-                      saveFormatChange(selectedRange.fromRow, j-1, _key, _value);
+                      modCom.saveFormatChange(selectedRange.fromRow, j-1, _key, _value);
                     }
                   }
                   else
                   {
                     $(options.$trigger[0]).toggleClass('cell-top-border');
-                    var classString=composeNewBorderCssClass(options.$trigger[0], 'cell-top-border');
+                    var classString=cSS.composeNewBorderCssClass(options.$trigger[0], 'cell-top-border');
                     var style={};
                     style[_row]={};
                     style[_row]['col'+_col]=classString;
                     grid.setCellCssStyles('border'+_row+'-'+_col, style);
                     var _value = ($(options.$trigger[0]).hasClass('cell-top-border')? {top: {width: 1, color:'#000'}} : {top:null});
-                    saveFormatChange(_row, _col, _key, _value);
+                    modCom.saveFormatChange(_row, _col, _key, _value);
                   }
                 },
               },
@@ -272,25 +295,25 @@ $(document).ready(function(){
                   if(selectedRange && selectedRange.contains(_row, _col+1)){
                     for(var j=selectedRange.fromRow; j<=selectedRange.toRow; ++j){
                       $(grid.getCellNode(j,selectedRange.fromCell)).toggleClass('cell-left-border');
-                      var classString=composeNewBorderCssClass(grid.getCellNode(j,selectedRange.fromCell), 'cell-left-border');
+                      var classString=cSS.composeNewBorderCssClass(grid.getCellNode(j,selectedRange.fromCell), 'cell-left-border');
                       var style={};
                       style[j]={};
                       style[j]['col'+(selectedRange.fromCell-1)]=classString;
                       grid.setCellCssStyles('border'+j+'-'+(selectedRange.fromCell-1), style);
                       var _value = ($(grid.getCellNode(j,selectedRange.fromCell)).hasClass('cell-left-border')? {left: {width: 1, color:'#000'}} : {left:null});
-                      saveFormatChange(j, selectedRange.fromCell-1, _key, _value);
+                      modCom.saveFormatChange(j, selectedRange.fromCell-1, _key, _value);
                     }
                   }
                   else
                   {
                     $(options.$trigger[0]).toggleClass('cell-left-border');
-                    var classString=composeNewBorderCssClass(options.$trigger[0], 'cell-left-border');
+                    var classString=cSS.composeNewBorderCssClass(options.$trigger[0], 'cell-left-border');
                     var style={};
                     style[_row]={};
                     style[_row]['col'+_col]=classString;
                     grid.setCellCssStyles('border'+_row+'-'+_col, style);
                     var _value = ($(options.$trigger[0]).hasClass('cell-left-border')? {left: {width: 1, color:'#000'}} : {left:null});
-                    saveFormatChange(_row, _col, _key, _value);
+                    modCom.saveFormatChange(_row, _col, _key, _value);
                   }
                 },
               },
@@ -303,25 +326,25 @@ $(document).ready(function(){
                   if(selectedRange && selectedRange.contains(_row, _col+1)){
                     for(var j=selectedRange.fromCell; j<=selectedRange.toCell; ++j){
                       $(grid.getCellNode(selectedRange.toRow,j)).toggleClass('cell-bottom-border');
-                      var classString=composeNewBorderCssClass(grid.getCellNode(selectedRange.toRow,j), 'cell-bottom-border');
+                      var classString=cSS.composeNewBorderCssClass(grid.getCellNode(selectedRange.toRow,j), 'cell-bottom-border');
                       var style={};
                       style[selectedRange.toRow]={};
                       style[selectedRange.toRow]['col'+(j-1)]=classString;
                       grid.setCellCssStyles('border'+selectedRange.toRow+'-'+(j-1), style);
                       var _value = ($(grid.getCellNode(selectedRange.toRow,j)).hasClass('cell-bottom-border')? {bottom: {width: 1, color:'#000'}} : {bottom:null});
-                      saveFormatChange(selectedRange.toRow, j-1, _key, _value);
+                      modCom.saveFormatChange(selectedRange.toRow, j-1, _key, _value);
                     }
                   }
                   else
                   {
                     $(options.$trigger[0]).toggleClass('cell-bottom-border');
-                    var classString=composeNewBorderCssClass(options.$trigger[0], 'cell-bottom-border');
+                    var classString=cSS.composeNewBorderCssClass(options.$trigger[0], 'cell-bottom-border');
                     var style={};
                     style[_row]={};
                     style[_row]['col'+_col]=classString;
                     grid.setCellCssStyles('border'+_row+'-'+_col, style);
                     var _value = ($(options.$trigger[0]).hasClass('cell-bottom-border')? {bottom: {width: 1, color:'#000'}} : {bottom:null});
-                    saveFormatChange(_row, _col, _key, _value);
+                    modCom.saveFormatChange(_row, _col, _key, _value);
                   }
                 },
               },
@@ -334,25 +357,25 @@ $(document).ready(function(){
                   if(selectedRange && selectedRange.contains(_row, _col+1)){
                     for(var j=selectedRange.fromRow; j<=selectedRange.toRow; ++j){
                       $(grid.getCellNode(j, selectedRange.toCell)).toggleClass('cell-right-border');
-                      var classString=composeNewBorderCssClass(grid.getCellNode(j,selectedRange.toCell), 'cell-right-border');
+                      var classString=cSS.composeNewBorderCssClass(grid.getCellNode(j,selectedRange.toCell), 'cell-right-border');
                       var style={};
                       style[j]={};
                       style[j]['col'+(selectedRange.toCell-1)]=classString;
                       grid.setCellCssStyles('border'+j+'-'+(selectedRange.toCell-1), style);
                       var _value = ($(grid.getCellNode(j, selectedRange.toCell)).hasClass('cell-right-border')? {right: {width: 1, color:'#000'}} : {right:null});
-                      saveFormatChange(j, selectedRange.toCell, _key, _value);
+                      modCom.saveFormatChange(j, selectedRange.toCell, _key, _value);
                     }
                   }
                   else
                   {
                     $(options.$trigger[0]).toggleClass('cell-right-border');
-                    var classString=composeNewBorderCssClass(options.$trigger[0], 'cell-right-border');
+                    var classString=cSS.composeNewBorderCssClass(options.$trigger[0], 'cell-right-border');
                     var style={};
                     style[_row]={};
                     style[_row]['col'+_col]=classString;
                     grid.setCellCssStyles('border'+_row+'-'+_col, style);
                     var _value = ($(options.$trigger[0]).hasClass('cell-right-border')? {right: {width: 1, color:'#000'}} : {right:null});
-                    saveFormatChange(_row, _col, _key, _value);
+                    modCom.saveFormatChange(_row, _col, _key, _value);
                   }
                 },
               },
@@ -368,7 +391,7 @@ $(document).ready(function(){
                       for(var j= selectedRange.fromCell; j<=selectedRange.toCell; ++j)
                       {
                         $(grid.getCellNode(i,j)).toggleClass('cell-top-border cell-left-border cell-bottom-border cell-right-border');
-                        var classString=composeNewBorderCssClass(grid.getCellNode(i,j), 'cell-top-border cell-left-border cell-bottom-border cell-right-border');
+                        var classString=cSS.composeNewBorderCssClass(grid.getCellNode(i,j), 'cell-top-border cell-left-border cell-bottom-border cell-right-border');
                         var style={};
                         style[j]={};
                         style[j]['col'+(j-1)]=classString;
@@ -390,13 +413,13 @@ $(document).ready(function(){
                           $.extend(_value, {right: {width: 1, color:'#000'}}); 
                         else
                           $.extend(_value, {right:null});
-                        saveFormatChange(i, j, _key, _value);
+                        modCom.saveFormatChange(i, j, _key, _value);
                       }
                   }
                   else
                   {
                     $(options.$trigger[0]).toggleClass('cell-top-border cell-left-border cell-bottom-border cell-right-border');
-                    var classString=composeNewBorderCssClass(options.$trigger[0], 'cell-top-border cell-left-border cell-bottom-border cell-right-border');
+                    var classString=cSS.composeNewBorderCssClass(options.$trigger[0], 'cell-top-border cell-left-border cell-bottom-border cell-right-border');
                     var style={};
                     style[_row]={};
                     style[_row]['col'+_col]=classString;
@@ -418,7 +441,7 @@ $(document).ready(function(){
                       $.extend(_value, {right: {width: 1, color:'#000'}}); 
                     else
                       $.extend(_value, {right:null});
-                    saveFormatChange(_row, _col, _key, _value);
+                    modCom.saveFormatChange(_row, _col, _key, _value);
                   }
                 },
               },
@@ -605,7 +628,7 @@ $(document).ready(function(){
 //         style[c.row]['col'+c.col]='cell-'+f.key;
 //         grid.addCellCssStyles(f.key+f.row+'-'+f.col, style);
         if(c.value && c.value.rgb){
-          if(!lookForClass('.cell-bg'+c.value.rgb.substr(2)))
+          if(!cSS.lookForClass('.cell-bg'+c.value.rgb.substr(2)))
             $("<style type='text/css'> .cell-bg"+c.value.rgb.substr(2)+"{ background-color: #"+c.value.rgb.substr(2)+" }</style>").appendTo("head");
           style={};
           style[c.row]={};
@@ -632,7 +655,7 @@ $(document).ready(function(){
       hideAfterPaletteSelect: true,
       change: function(color) {
         var c=$('#showPaletteOnly').spectrum('get').toHex();
-        if(!lookForClass('.cell-bg'+c))
+        if(!css.lookForClass('.cell-bg'+c))
           $("<style type='text/css'> .cell-bg"+c+"{ background-color: #"+c+" }</style>").appendTo("head");
         style={};
         var _row = grid.getActiveCell().row;
@@ -641,7 +664,7 @@ $(document).ready(function(){
         style[grid.getActiveCell().row]['col'+_col]='cell-bg'+c;
         grid.setCellCssStyles('color'+_row+'-'+_col, style);
         //$(grid.getActiveCellNode()).css('background-color', '#'+$('#showPaletteOnly').spectrum('get').toHex());
-        saveFormatChange(_row, _col, 'color', {rgb:'FF'+c});
+        modCom.saveFormatChange(_row, _col, 'color', {rgb:'FF'+c});
       },
       palette: [
       ["rgb(0, 0, 0)", "rgb(67, 67, 67)", "rgb(102, 102, 102)",
@@ -734,7 +757,7 @@ $(document).ready(function(){
       {
         if(data.value)
         {
-          if(!lookForClass('.cell-bg'+data.value.rgb.substr(2)))
+          if(!cSS.lookForClass('.cell-bg'+data.value.rgb.substr(2)))
             $("<style type='text/css'> .cell-bg"+data.value.rgb.substr(2)+"{ background-color: #"+data.value.rgb.substr(2)+" }</style>").appendTo("head");
           style={};
           style[data.row]={};
