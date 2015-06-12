@@ -2181,15 +2181,21 @@ if (typeof Slick === "undefined") {
       if (!cell || !cellExists(cell.row, cell.cell)) {
         return false;
       }
-
-      var retval = trigger(self.onDragInit, dd, e);
-      if (e.isImmediatePropagationStopped()) {
-        return retval;
-      }
-
-      // if nobody claims to be handling drag'n'drop by stopping immediate propagation,
-      // cancel out of it
-      return false;
+      trigger(self.onDragInit, dd, e).then(function(result){
+        var retval = result;
+        if (e.isImmediatePropagationStopped()) {
+          return retval;
+        }
+        return false;
+      });
+//       var retval = trigger(self.onDragInit, dd, e);
+//       if (e.isImmediatePropagationStopped()) {
+//         return retval;
+//       }
+// 
+//       // if nobody claims to be handling drag'n'drop by stopping immediate propagation,
+//       // cancel out of it
+//       return false;
     }
 
     function handleDragStart(e, dd) {
@@ -2197,7 +2203,15 @@ if (typeof Slick === "undefined") {
       if (!cell || !cellExists(cell.row, cell.cell)) {
         return false;
       }
-
+      
+      trigger(self.onDragStart, dd, e).then(function(result){
+        var retval = result;
+        if (e.isImmediatePropagationStopped()) {
+          return retval;
+        }
+        
+        return false;
+      });
       var retval = trigger(self.onDragStart, dd, e);
       if (e.isImmediatePropagationStopped()) {
         return retval;
@@ -2207,7 +2221,10 @@ if (typeof Slick === "undefined") {
     }
 
     function handleDrag(e, dd) {
-      return trigger(self.onDrag, dd, e);
+      trigger(self.onDrag, dd, e).then(function(result){
+        return result;
+      });
+      //return trigger(self.onDrag, dd, e);
     }
 
     function handleDragEnd(e, dd) {

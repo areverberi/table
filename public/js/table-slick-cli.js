@@ -124,6 +124,8 @@ $(document).ready(function(){
       grid = new Slick.Grid('#tab', dataView, columns, options);
       grid.setSelectionModel(new Slick.CellRangeSelector());
       grid.getSelectionModel().onCellRangeSelected.subscribe(function(e, args){
+        console.log("called");
+        console.log(args.range);
         selectedRange=args.range;
       });
       dataView.onRowCountChanged.subscribe(function(e, args){
@@ -198,6 +200,7 @@ $(document).ready(function(){
                     var _value = ($(grid.getCellNode(i,j)).hasClass('cell-bold')? true: null);
                     modCom.saveFormatChange(i, j-1, _key, _value);
                   }
+                  selectedRange = null;
               }
               else
               {
@@ -221,6 +224,7 @@ $(document).ready(function(){
                     var _value = ($(grid.getCellNode(i,j)).hasClass('cell-italic')? true: null);
                     modCom.saveFormatChange(i, j-1, _key, _value);
                   }
+                  selectedRange = null;
               }
               else
               {
@@ -252,6 +256,7 @@ $(document).ready(function(){
                       var _value = ($(grid.getCellNode(selectedRange.fromRow,j)).hasClass('cell-top-border')? {top: {width: 1, color:'#000'}} : {top:null});
                       modCom.saveFormatChange(selectedRange.fromRow, j-1, _key, _value);
                     }
+                    selectedRange = null;
                   }
                   else
                   {
@@ -286,6 +291,7 @@ $(document).ready(function(){
                       var _value = ($(grid.getCellNode(j,selectedRange.fromCell)).hasClass('cell-left-border')? {left: {width: 1, color:'#000'}} : {left:null});
                       modCom.saveFormatChange(j, selectedRange.fromCell-1, _key, _value);
                     }
+                    selectedRange = null;
                   }
                   else
                   {
@@ -320,6 +326,7 @@ $(document).ready(function(){
                       var _value = ($(grid.getCellNode(selectedRange.toRow,j)).hasClass('cell-bottom-border')? {bottom: {width: 1, color:'#000'}} : {bottom:null});
                       modCom.saveFormatChange(selectedRange.toRow, j-1, _key, _value);
                     }
+                    selectedRange = null;
                   }
                   else
                   {
@@ -344,7 +351,7 @@ $(document).ready(function(){
                   var _key = 'borders'
                   if(selectedRange && selectedRange.contains(_row, _col+1)){
                     for(var j=selectedRange.fromRow; j<=selectedRange.toRow; ++j){
-                      cSS.applyCssClass(grid, grid.getCellNode(j, selectedRange.toCell), _key, j, selectedRange.toCell-1, 'cell-right-border', cSS.composeCssClass(borderClasses));
+                      cSS.applyCssClass(grid, grid.getCellNode(j, selectedRange.toCell), _key, j, selectedRange.toCell, 'cell-right-border', cSS.composeCssClass(borderClasses));
 //                       $(grid.getCellNode(j, selectedRange.toCell)).toggleClass('cell-right-border');
 //                       var classString=cSS.composeNewBorderCssClass(grid.getCellNode(j,selectedRange.toCell), 'cell-right-border');
 //                       var style={};
@@ -352,8 +359,9 @@ $(document).ready(function(){
 //                       style[j]['col'+(selectedRange.toCell-1)]=classString;
 //                       grid.setCellCssStyles('border'+j+'-'+(selectedRange.toCell-1), style);
                       var _value = ($(grid.getCellNode(j, selectedRange.toCell)).hasClass('cell-right-border')? {right: {width: 1, color:'#000'}} : {right:null});
-                      modCom.saveFormatChange(j, selectedRange.toCell, _key, _value);
+                      modCom.saveFormatChange(j, selectedRange.toCell-1, _key, _value);
                     }
+                    selectedRange = null;
                   }
                   else
                   {
@@ -407,6 +415,7 @@ $(document).ready(function(){
                           $.extend(_value, {right:null});
                         modCom.saveFormatChange(i, j-1, _key, _value);
                       }
+                      selectedRange = null;
                   }
                   else
                   {
