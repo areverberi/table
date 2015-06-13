@@ -2,7 +2,7 @@
 Spreadsheet collaboration tool in Node.js. Uses a (slightly) modified version of Slickgrid for the front-end and js-xlsx to generate and parse xlsx files.
 The database backend is mongodb.
 ## Installation
-cloning the database and then running
+cloning the repository and then running
 ```
 node table.js
 ```
