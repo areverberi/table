@@ -50,6 +50,8 @@ function loadCallback(req, res)
   this.res=res;
   var self=this;
   return (function loadCb(err, result){
+    console.log(err);
+    console.log(result);
     var wb = new Workbook();
     var ws_name = 'Foglio1';
     wb.SheetNames.push(ws_name);
@@ -77,6 +79,8 @@ function loadCallback(req, res)
     });
     result.format.forEach(function(cell){
       var cell_ref = xlsx.utils.encode_cell({c:cell.col, r:cell.row});
+      if(!ws[cell_ref])
+        ws[cell_ref]={v:''};
       if(!ws[cell_ref].s)
         ws[cell_ref].s={};
       if(cell.key === 'bold')
@@ -136,6 +140,7 @@ exports.down = function (req, res){
         wb.SheetNames.push(ws_name);
         var ws ={};
         var range = {s: {c:10000000, r:10000000}, e: {c:0, r:0 }};
+        console.log('--------------------------------------------------------------------------');
         loadData(req, res, loadCallback);
       }
     });

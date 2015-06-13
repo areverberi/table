@@ -21,7 +21,12 @@ function loadCallback(req, res)
 
 function loadData(req, res, cb)
 {
-  var filter={table: {name: req.body.table }};
+  var filter;
+  if(req.body.table)
+    filter={table: {name: req.body.table }};
+  else
+    filter={table: {name: req.params.name}};
+  console.log(filter);
   var filter_select='-_id -table -__v';
   async.parallel({
     layout: function(callback){
@@ -38,6 +43,7 @@ function loadData(req, res, cb)
     },
   },
   function(err, results){
+    console.log("from loadData", results);
     cb(req, res)(err, results);
   });
 }

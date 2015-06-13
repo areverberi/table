@@ -184,36 +184,36 @@ $(document).ready(function(){
       });
       $("#showPaletteOnly").spectrum({
         color: "rgb(244, 204, 204)",    
-                                     showPaletteOnly: true,
-                                     showPalette: true,
-                                     hideAfterPaletteSelect: true,
-                                     change: function(color) {
-                                       var c=$('#showPaletteOnly').spectrum('get').toHex();
-                                       cSS.createColorClassIfNotExists(c);
-                                       style={};
-                                       var _row = grid.getActiveCell().row;
-                                       var _col = grid.getActiveCell().cell-1;
-                                       style[grid.getActiveCell().row]={};
-                                       style[grid.getActiveCell().row]['col'+_col]='cell-bg'+c;
-                                       grid.setCellCssStyles('color'+_row+'-'+_col, style);
-                                       modCom.saveFormatChange(_row, _col, 'color', {rgb:'FF'+c});
-                                     },
-                                     palette: [
-                                     ["rgb(0, 0, 0)", "rgb(67, 67, 67)", "rgb(102, 102, 102)",
-                                     "rgb(204, 204, 204)", "rgb(217, 217, 217)","rgb(255, 255, 255)"],
-                                     ["rgb(152, 0, 0)", "rgb(255, 0, 0)", "rgb(255, 153, 0)", "rgb(255, 255, 0)", "rgb(0, 255, 0)",
-                                     "rgb(0, 255, 255)", "rgb(74, 134, 232)", "rgb(0, 0, 255)", "rgb(153, 0, 255)", "rgb(255, 0, 255)"], 
-                                     ["rgb(230, 184, 175)", "rgb(244, 204, 204)", "rgb(252, 229, 205)", "rgb(255, 242, 204)", "rgb(217, 234, 211)", 
-                                     "rgb(208, 224, 227)", "rgb(201, 218, 248)", "rgb(207, 226, 243)", "rgb(217, 210, 233)", "rgb(234, 209, 220)", 
-                                     "rgb(221, 126, 107)", "rgb(234, 153, 153)", "rgb(249, 203, 156)", "rgb(255, 229, 153)", "rgb(182, 215, 168)", 
-                                     "rgb(162, 196, 201)", "rgb(164, 194, 244)", "rgb(159, 197, 232)", "rgb(180, 167, 214)", "rgb(213, 166, 189)", 
-                                     "rgb(204, 65, 37)", "rgb(224, 102, 102)", "rgb(246, 178, 107)", "rgb(255, 217, 102)", "rgb(147, 196, 125)", 
-                                     "rgb(118, 165, 175)", "rgb(109, 158, 235)", "rgb(111, 168, 220)", "rgb(142, 124, 195)", "rgb(194, 123, 160)",
-                                     "rgb(166, 28, 0)", "rgb(204, 0, 0)", "rgb(230, 145, 56)", "rgb(241, 194, 50)", "rgb(106, 168, 79)",
-                                     "rgb(69, 129, 142)", "rgb(60, 120, 216)", "rgb(61, 133, 198)", "rgb(103, 78, 167)", "rgb(166, 77, 121)",
-                                     "rgb(91, 15, 0)", "rgb(102, 0, 0)", "rgb(120, 63, 4)", "rgb(127, 96, 0)", "rgb(39, 78, 19)", 
-                                     "rgb(12, 52, 61)", "rgb(28, 69, 135)", "rgb(7, 55, 99)", "rgb(32, 18, 77)", "rgb(76, 17, 48)"]
-                                     ]
+        showPaletteOnly: true,
+        showPalette: true,
+        hideAfterPaletteSelect: true,
+        change: function(color) {
+          var c=$('#showPaletteOnly').spectrum('get').toHex();
+          cSS.createColorClassIfNotExists(c);
+          style={};
+          var _row = grid.getActiveCell().row;
+          var _col = grid.getActiveCell().cell-1;
+          style[grid.getActiveCell().row]={};
+          style[grid.getActiveCell().row]['col'+_col]='cell-bg'+c;
+          grid.setCellCssStyles('color'+_row+'-'+_col, style);
+          modCom.saveFormatChange(_row, _col, 'color', {rgb:'FF'+c});
+        },
+        palette: [
+        ["rgb(0, 0, 0)", "rgb(67, 67, 67)", "rgb(102, 102, 102)",
+        "rgb(204, 204, 204)", "rgb(217, 217, 217)","rgb(255, 255, 255)"],
+        ["rgb(152, 0, 0)", "rgb(255, 0, 0)", "rgb(255, 153, 0)", "rgb(255, 255, 0)", "rgb(0, 255, 0)",
+        "rgb(0, 255, 255)", "rgb(74, 134, 232)", "rgb(0, 0, 255)", "rgb(153, 0, 255)", "rgb(255, 0, 255)"], 
+        ["rgb(230, 184, 175)", "rgb(244, 204, 204)", "rgb(252, 229, 205)", "rgb(255, 242, 204)", "rgb(217, 234, 211)", 
+        "rgb(208, 224, 227)", "rgb(201, 218, 248)", "rgb(207, 226, 243)", "rgb(217, 210, 233)", "rgb(234, 209, 220)", 
+        "rgb(221, 126, 107)", "rgb(234, 153, 153)", "rgb(249, 203, 156)", "rgb(255, 229, 153)", "rgb(182, 215, 168)", 
+        "rgb(162, 196, 201)", "rgb(164, 194, 244)", "rgb(159, 197, 232)", "rgb(180, 167, 214)", "rgb(213, 166, 189)", 
+        "rgb(204, 65, 37)", "rgb(224, 102, 102)", "rgb(246, 178, 107)", "rgb(255, 217, 102)", "rgb(147, 196, 125)", 
+        "rgb(118, 165, 175)", "rgb(109, 158, 235)", "rgb(111, 168, 220)", "rgb(142, 124, 195)", "rgb(194, 123, 160)",
+        "rgb(166, 28, 0)", "rgb(204, 0, 0)", "rgb(230, 145, 56)", "rgb(241, 194, 50)", "rgb(106, 168, 79)",
+        "rgb(69, 129, 142)", "rgb(60, 120, 216)", "rgb(61, 133, 198)", "rgb(103, 78, 167)", "rgb(166, 77, 121)",
+        "rgb(91, 15, 0)", "rgb(102, 0, 0)", "rgb(120, 63, 4)", "rgb(127, 96, 0)", "rgb(39, 78, 19)", 
+        "rgb(12, 52, 61)", "rgb(28, 69, 135)", "rgb(7, 55, 99)", "rgb(32, 18, 77)", "rgb(76, 17, 48)"]
+        ]
       });
       $.contextMenu({
         selector: '.slick-cell',
@@ -280,12 +280,6 @@ $(document).ready(function(){
                   if(selectedRange && selectedRange.contains(_row, _col+1)){
                     for(var j=selectedRange.fromCell; j<=selectedRange.toCell; ++j){
                       cSS.applyCssClass(grid, grid.getCellNode(selectedRange.fromRow,j), _key, selectedRange.fromRow, j-1, 'cell-top-border', cSS.composeCssClass(borderClasses));
-//                       $(grid.getCellNode(selectedRange.fromRow,j)).toggleClass('cell-top-border');
-//                       var classString=cSS.composeNewBorderCssClass(grid.getCellNode(selectedRange.fromRow,j), 'cell-top-border');
-//                       var style={};
-//                       style[selectedRange.fromRow]={};
-//                       style[selectedRange.fromRow]['col'+(j-1)]=classString;
-//                       grid.setCellCssStyles('border'+selectedRange.fromRow+'-'+(j-1), style);
                       var _value = ($(grid.getCellNode(selectedRange.fromRow,j)).hasClass('cell-top-border')? {top: {width: 1, color:'#000'}} : {top:null});
                       modCom.saveFormatChange(selectedRange.fromRow, j-1, _key, _value);
                     }
@@ -294,12 +288,6 @@ $(document).ready(function(){
                   else
                   {
                     cSS.applyCssClass(grid, options.$trigger[0], _key, _row, _col, 'cell-top-border', cSS.composeCssClass(borderClasses));
-//                     $(options.$trigger[0]).toggleClass('cell-top-border');
-//                     var classString=cSS.composeNewBorderCssClass(options.$trigger[0], 'cell-top-border');
-//                     var style={};
-//                     style[_row]={};
-//                     style[_row]['col'+_col]=classString;
-//                     grid.setCellCssStyles('border'+_row+'-'+_col, style);
                     var _value = ($(options.$trigger[0]).hasClass('cell-top-border')? {top: {width: 1, color:'#000'}} : {top:null});
                     modCom.saveFormatChange(_row, _col, _key, _value);
                   }
@@ -315,12 +303,6 @@ $(document).ready(function(){
                   if(selectedRange && selectedRange.contains(_row, _col+1)){
                     for(var j=selectedRange.fromRow; j<=selectedRange.toRow; ++j){
                       cSS.applyCssClass(grid, grid.getCellNode(j,selectedRange.fromCell), _key, j, selectedRange.fromCell-1, 'cell-left-border', cSS.composeCssClass(borderClasses));
-//                       $(grid.getCellNode(j,selectedRange.fromCell)).toggleClass('cell-left-border');
-//                       var classString=cSS.composeNewBorderCssClass(grid.getCellNode(j,selectedRange.fromCell), 'cell-left-border');
-//                       var style={};
-//                       style[j]={};
-//                       style[j]['col'+(selectedRange.fromCell-1)]=classString;
-//                       grid.setCellCssStyles('border'+j+'-'+(selectedRange.fromCell-1), style);
                       var _value = ($(grid.getCellNode(j,selectedRange.fromCell)).hasClass('cell-left-border')? {left: {width: 1, color:'#000'}} : {left:null});
                       modCom.saveFormatChange(j, selectedRange.fromCell-1, _key, _value);
                     }
@@ -329,12 +311,6 @@ $(document).ready(function(){
                   else
                   {
                     cSS.applyCssClass(grid, options.$trigger[0], _key, _row, _col, 'cell-left-border', cSS.composeCssClass(borderClasses));
-//                     $(options.$trigger[0]).toggleClass('cell-left-border');
-//                     var classString=cSS.composeNewBorderCssClass(options.$trigger[0], 'cell-left-border');
-//                     var style={};
-//                     style[_row]={};
-//                     style[_row]['col'+_col]=classString;
-//                     grid.setCellCssStyles('border'+_row+'-'+_col, style);
                     var _value = ($(options.$trigger[0]).hasClass('cell-left-border')? {left: {width: 1, color:'#000'}} : {left:null});
                     modCom.saveFormatChange(_row, _col, _key, _value);
                   }
@@ -592,7 +568,6 @@ $(document).ready(function(){
     }
     if(results.data.layout)
     {
-      console.log(results.data.layout);
       results.data.layout.forEach(function(l){
         if(l.type === 'col')
         {
@@ -603,12 +578,9 @@ $(document).ready(function(){
     }
     if(results.data.color)
     {
-      console.log(results.data.color);
       results.data.color.forEach(function(c){
         if(c.value && c.value.rgb){
           cSS.createColorClassIfNotExists(c.value.rgb.substr(2));
-//           if(!cSS.lookForClass('.cell-bg'+c.value.rgb.substr(2)))
-//             $("<style type='text/css'> .cell-bg"+c.value.rgb.substr(2)+"{ background-color: #"+c.value.rgb.substr(2)+" }</style>").appendTo("head");
           style={};
           style[c.row]={};
           style[c.row]['col'+c.col]='cell-bg'+c.value.rgb.substr(2);
@@ -629,7 +601,6 @@ $(document).ready(function(){
   $('#tab').height($(window).height());
   var socket = io.connect('http://table.stschioppa.hom', {'sync disconnect on unload' : true});  
   socket.on('connect', function(){
-    console.log('connected');
     grid.onBeforeEditCell.subscribe(function(e, args){
       var deferred=Q.defer();
       socket.emit('datalock-req', {row: args.row, col: args.cell-1, table:{name:$('#name').val()}}, function(data){
