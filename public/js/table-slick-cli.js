@@ -33,15 +33,98 @@
           data: JSON.stringify({changes: change, table:$('#name').val()})
         });
       },
- //TODO needs loading code too. eventually socket code as well
+      loadData: function(callback, tableName, grid){
+        $.ajax({
+          url: '/load',
+          dataType: 'json',
+          contentType: 'application/json',
+          type: 'POST',
+          data: JSON.stringify({table:tableName}),
+               success: function(data, status, jqx){
+                 var loadedData={};
+                 var borderArray=[];
+                 var formatArray=[];
+                 var colorArray=[];
+                 data.format.forEach(function(meta){
+                   if(meta.key === 'borders' && meta.value)
+                   {
+                     var b={row:meta.row, col:meta.col}
+                     if(meta.value.top && !meta.value.top.hide)
+                       b.top=meta.value.top;
+                     if(meta.value.left && !meta.value.left.hide)
+                       b.left=meta.value.left;
+                     if(meta.value.bottom && !meta.value.bottom.hide)
+                       b.bottom=meta.value.bottom;
+                     if(meta.value.right && !meta.value.right.hide)
+                       b.right=meta.value.right;
+                     borderArray.push(b);
+                   }
+                   if(meta.key === 'color')
+                     colorArray.push(meta);
+                   if(meta.key != 'borders' && meta.key != 'color')
+                   {
+                     formatArray.push(meta);
+                   }
+                 });
+                 var rowid=0;
+                 loadedData.table=[];
+                 while(rowid<100 || data.table.length>0){
+                   var inRow = data.table.filter(function(item){
+                     return item.row == rowid;
+                   });
+                   if(inRow.length == 0)
+                   {
+                     loadedData.table[rowid]={};
+                     loadedData.table[rowid].id=rowid;
+                     for(var i=1; i<grid.getColumns().length; ++i)
+                     {
+                       loadedData.table[rowid]['col'+(i-1)]='';
+                     }
+                   }
+                   else
+                   {
+                     var r={};
+                     r.id=rowid;
+                     inRow.forEach(function(cell){
+                       if(!(cell.col<grid.getColumns().length-1))
+                       {
+                         var delta=cell.col-grid.getColumns().length+1
+                         while(delta>=0)
+                         {
+                           var cols=grid.getColumns();
+                           cols.push({id:'col'+cols.length, name:cols.length, field:'col'+cols.length, width:70, editor:Slick.Editors.Text });
+                           grid.setColumns(cols);
+                           --delta;
+                         }
+                       }
+                       r['col'+cell.col]=cell.val;
+                     });
+                     loadedData.table[rowid]=r;
+                   }
+                   data.table=data.table.filter(function(item){
+                     return item.row != rowid;
+                   });
+                   ++rowid;
+                 }
+                 loadedData.borders=borderArray;
+                 loadedData.format=formatArray;
+                 loadedData.color=colorArray;
+                 loadedData.layout=data.layout;
+                 loadedData.locks=data.locks;
+                 callback(null, loadedData);
+               },
+        });
+      },
     };
     return {
       saveLayoutChange: mC.saveLayoutChange,
       saveFormatChange: mC.saveFormatChange,
       saveDataChange: mC.saveDataChange,
+      loadData: mC.loadData,
     };
   };
 })(jQuery);
+
 (function($){
   $.cellStyleSetter = function(options){
     var cSS ={
@@ -98,9 +181,9 @@
       applyCssClass: cSS.applyCssClass,
       createColorClassIfNotExists: cSS.createColorClassIfNotExists,
     };
-    //TODO will contain all code dealing with querying/applying/removing css styles to cells (formatting + layout)
   };
 })(jQuery);
+
 $(document).ready(function(){
   var modCom = $.modelCommunication();
   var cSS = $.cellStyleSetter();
@@ -429,86 +512,7 @@ $(document).ready(function(){
     data: function(callback){
       if($('#load').val() != 'undefined')
       {
-	$.ajax({
-	  url: '/load',
-	  dataType: 'json',
-	  contentType: 'application/json',
-	  type: 'POST',
-	  data: JSON.stringify({table:$('#name').val()}),
-	  success: function(data, status, jqx){
-	    loadedData={};
-	    var borderArray=[];
-	    var formatArray=[];
-            var colorArray=[];
-	    data.format.forEach(function(meta){
-	      if(meta.key === 'borders' && meta.value)
-	      {
-		var b={row:meta.row, col:meta.col}
-		if(meta.value.top && !meta.value.top.hide)
-		  b.top=meta.value.top;
-		if(meta.value.left && !meta.value.left.hide)
-		  b.left=meta.value.left;
-		if(meta.value.bottom && !meta.value.bottom.hide)
-		  b.bottom=meta.value.bottom;
-		if(meta.value.right && !meta.value.right.hide)
-		  b.right=meta.value.right;
-		borderArray.push(b);
-	      }
-	      if(meta.key === 'color')
-                colorArray.push(meta);
-	      if(meta.key != 'borders' && meta.key != 'color')
-	      {
-		formatArray.push(meta);
-	      }
-	    });
-            var rowid=0;
-            loadedData.table=[];
-            while(rowid<100 || data.table.length>0){
-              var inRow = data.table.filter(function(item){
-                return item.row == rowid;
-              });
-              if(inRow.length == 0)
-              {
-                loadedData.table[rowid]={};
-                loadedData.table[rowid].id=rowid;
-                for(var i=1; i<grid.getColumns().length; ++i)
-                {
-                  loadedData.table[rowid]['col'+(i-1)]='';
-                }
-              }
-              else
-              {
-                var r={};
-                r.id=rowid;
-                inRow.forEach(function(cell){
-                  if(!(cell.col<grid.getColumns().length-1))
-                  {
-                    var delta=cell.col-grid.getColumns().length+1
-                    while(delta>=0)
-                    {
-                      var cols=grid.getColumns();
-                      cols.push({id:'col'+cols.length, name:cols.length, field:'col'+cols.length, width:70, editor:Slick.Editors.Text });
-                      grid.setColumns(cols);
-                      --delta;
-                    }
-                  }
-                    r['col'+cell.col]=cell.val;
-                });
-                loadedData.table[rowid]=r;
-              }
-              data.table=data.table.filter(function(item){
-                return item.row != rowid;
-              });
-              ++rowid;
-            }
-            loadedData.borders=borderArray;
-            loadedData.format=formatArray;
-            loadedData.color=colorArray;
-            loadedData.layout=data.layout;
-            loadedData.locks=data.locks;
-            callback(null, loadedData);
-      },
-    });
+        modCom.loadData(callback, $('#name').val(), grid);
       }
       else
       {
@@ -543,7 +547,6 @@ $(document).ready(function(){
     }
     if(results.data.borders)
     {
-      var hashes=[];
       results.data.borders.forEach(function(b){
         var style={};
         style[b.row]={};
@@ -657,8 +660,6 @@ $(document).ready(function(){
       {
         if(data.value)
         {
-//           if(!cSS.lookForClass('.cell-bg'+data.value.rgb.substr(2)))
-//             $("<style type='text/css'> .cell-bg"+data.value.rgb.substr(2)+"{ background-color: #"+data.value.rgb.substr(2)+" }</style>").appendTo("head");
           cSS.createColorClassIfNotExists(data.value.rgb.substr(2));
           style={};
           style[data.row]={};
