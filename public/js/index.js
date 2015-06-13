@@ -26,6 +26,7 @@ $(document).ready(function(){
 	type: 'GET',
 	success: function(data, status, jqx){
 	  $('#listt-container').append('<br><br>');
+          data = data.sort().reverse();
 	  data.forEach(function(t){
 	    if(t)
             {
