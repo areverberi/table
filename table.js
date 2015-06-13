@@ -59,3 +59,7 @@ app.get('/list', tableOps.list);
 app.get('/d/:name', xlsxOps.down);
 
 app.get('/clone/:nameold/to/:namenew', tableOps.clone);
+
+app.get('/rename/:nameold/to/:namenew', tableOps.clone);
+
+app.get('/del/:name', tableOps.delete);

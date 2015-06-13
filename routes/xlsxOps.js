@@ -153,6 +153,10 @@ exports.up = function (file, req, res){
     var layout=[];
     var format=[];
     var table=[];
+    if(!ws['!cols']){
+      cb(null);
+      return;
+    }
     ws['!cols'].forEach(function(col, index){
       var layoutObj = {type: 'col', position: index, size: col.wpx, table: tableName}
       layout.push(layoutObj);
@@ -193,12 +197,28 @@ exports.up = function (file, req, res){
         }
         if(ws[cell].s.fill)
         {
-          formatObj.push({col: _col, row: _row, key:'color', value: ws[cell].s.fill.fgColor});
+          //console.log(ws[cell].s.fill.fgColor);
+          if(ws[cell].s.fill.fgColor && ws[cell].s.fill.fgColor.rgb)
+          {
+            var color;
+            if(ws[cell].s.fill.fgColor.rgb.length === 8)
+              color = {rgb: ws[cell].s.fill.fgColor.rgb};
+            else
+              color = {rgb: 'FF'+ws[cell].s.fill.fgColor.rgb};
+            if(color.rgb === "FF000000")
+              color.rgb = "FFFFFFFF";
+            if(color.rgb === "FFEEECE1")
+              color.rgb = "FF1F497D";
+            else if(color.rgb === "FF1F497D")
+              color.rgb = "FFEEECE1";
+            formatObj.push({col: _col, row: _row, key:'color', value: color});
+             //console.log(formatObj);
+          }
         }
         formatObj.table = tableName;
       }
       format.push.apply(format, formatObj);
     }
-    saveAll(layout, format, table, file.name.replace(/\.[^/.]+$/, "")+'-'+sheetName.replace(/\s+/g, ''), cb);
-  }, saveCallback(deferred, file.name.replace(/\.[^/.]+$/, "")+'-'+wb.SheetNames[0].replace(/\s+/g, ''))); 
+    saveAll(layout, format, table, sheetName.replace(/\s+/g, '')+'-'+file.name.replace(/\.[^/.]+$/, ""), cb);
+  }, saveCallback(deferred,wb.SheetNames[0].replace(/\s+/g, '')+'-'+ file.name.replace(/\.[^/.]+$/, ""))); 
 };

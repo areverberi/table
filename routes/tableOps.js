@@ -52,6 +52,41 @@ exports.load = function(req, res){
 
 exports.loadData = loadData;
 
+exports.delete = function(req, res){
+  if(req.params.name)
+  {
+    async.parallel({
+      table: function(callback){
+        Tupd.remove({table: {name: req.params.name}}, function(err, t){
+          if(err)
+            callback(err);
+          callback(null);
+        });
+      },
+      format: function(callback){
+        Fupd.remove({table: {name: req.params.name}}, function(err, f){
+          if(err)
+            callback(err);
+          callback(null);
+        });
+      },
+      layout: function(callback){
+        Lupd.remove({table: {name: req.params.name}}, function(err, l){
+          if(err)
+            callback(err);
+          callback(null);
+        });
+      },
+    },
+    function(err, result){
+      if(err)
+        return;
+      res.redirect('/');
+    }  
+    );
+  }
+};
+
 exports.clone = function(req, res){
   if(req.params.nameold && req.params.namenew)
   {
@@ -113,6 +148,42 @@ exports.clone = function(req, res){
     );
   }
 };
+
+exports.rename = function(req, res){
+  if(req.params.nameold && req.params.namenew)
+  {
+    async.parallel({
+      table: function(callback){
+        Tupd.update({table: {name: req.params.nameold}}, {table: {name: req.params.namenew}}, function(err, t){
+          if(err)
+            callback(err);
+          callback(null);
+        });
+      },
+      format: function(callback){
+        Fupd.update({table: {name: req.params.nameold}}, {table: {name: req.params.namenew}}, function(err, f){
+          if(err)
+            callback(err);
+          callback(null);
+        });
+      },
+      layout: function(callback){
+        Lupd.find({table: {name: req.params.nameold}}, {table: {name: req.params.namenew}}, function(err, l){
+          if(err)
+            callback(err);
+          callback(null);
+        });
+      },
+    },
+    function(err, result){
+      if(err)
+        return;
+      res.redirect('/t/'+req.params.namenew);
+    }  
+    );
+  }
+};
+
 exports.t = function(req, res){
   if(req.params.name)
   {

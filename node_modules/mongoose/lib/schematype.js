@@ -429,6 +429,7 @@ SchemaType.prototype.validate = function (obj, message, type) {
         properties.message = properties.msg;
       }
       properties.validator = obj;
+      properties.type = properties.type || 'user defined';
     } else {
       if (!message) message = errorMessages.general.default;
       if (!type) type = 'user defined';
@@ -562,7 +563,7 @@ SchemaType.prototype.applySetters = function (value, scope, init, priorVal) {
   while (len--) {
     v = setters[len].call(scope, v, this);
   }
-  
+
   if (Array.isArray(v) && caster && caster.setters) {
     var newVal = [];
     for (var i = 0; i < v.length; i++) {
